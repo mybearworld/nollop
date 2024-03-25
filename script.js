@@ -132,7 +132,7 @@
         const li = document.createElement("li");
         ul.append(li);
         const strong = document.createElement("strong");
-        strong.textContent = brokenLetter;
+        strong.textContent = brokenLetter.toUpperCase();
         li.append(
           typeof brokenRule === "boolean" ? "Use of " : "Inappropriate use of ",
           strong,
