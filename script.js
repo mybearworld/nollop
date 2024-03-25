@@ -101,6 +101,7 @@
 
   const check = () => {
     const toCheck = input.value.toLowerCase().trim();
+    validity.hidden = toCheck === "";
     const brokenRules = Object.entries(RULES).filter(([letter, rule]) => {
       if (typeof rule === "boolean") {
         return !rule && toCheck.includes(letter);
