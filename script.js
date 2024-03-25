@@ -78,7 +78,8 @@
     const resultEl = document.createElement("td");
     tr.append(letterNameEl, alphabetStatusEl, textStatusEl, resultEl);
     letterNameEl.textContent = letter.toUpperCase();
-    letterNameEl.classList.add("letter");
+    letterNameEl.classList.add("bold");
+    resultEl.classList.add("bold");
     setElementToStatus(alphabetStatusEl, alphabetStatus);
     setElementToStatus(textStatusEl, textStatus);
     setElementToStatus(resultEl, result);
