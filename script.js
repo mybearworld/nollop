@@ -3,7 +3,7 @@
   "use strict";
 
   /**
-   * @typedef {boolean | { text: string, result: string }} Rule
+   * @typedef {boolean | { text: string, result: string, breaksRule: RegExp }} Rule
    */
 
   // Based on:
@@ -18,6 +18,7 @@
     e: {
       text: 'Censored in "The quick", but not in "The lazy"',
       result: "Allowed before voiced consonant letters",
+      breaksRule: /e\s*[^\sbdghjlmnrvwz]|e$/g,
     },
     f: false,
     g: true,
@@ -31,6 +32,7 @@
     o: {
       text: 'Censored in "brown", but not in "fox" and "over"',
       result: "Allowed before non-semivowel consonants",
+      breaksRule: /o\s*[^\sbcdfghklmnpqrstvxyz]|o$/g,
     },
     p: true,
     q: false,
@@ -72,6 +74,7 @@
 
     const tr = document.createElement("tr");
     rulesEl.append(tr);
+    tr.dataset[`letter${letter.toUpperCase()}`] = "";
     const letterNameEl = document.createElement("td");
     const alphabetStatusEl = document.createElement("td");
     const textStatusEl = document.createElement("td");
@@ -84,4 +87,67 @@
     setElementToStatus(textStatusEl, textStatus);
     setElementToStatus(resultEl, result);
   });
+
+  /** @type {?HTMLInputElement} */
+  const input = document.querySelector("#input");
+  if (!input) {
+    throw new Error("Input not found");
+  }
+  /** @type {?HTMLDivElement} */
+  const validity = document.querySelector("#validity");
+  if (!validity) {
+    throw new Error("Validity not found");
+  }
+
+  const check = () => {
+    const toCheck = input.value.toLowerCase().trim();
+    const brokenRules = Object.entries(RULES).filter(([letter, rule]) => {
+      if (typeof rule === "boolean") {
+        return !rule && toCheck.includes(letter);
+      }
+      return toCheck.match(rule.breaksRule);
+    });
+    validity.innerHTML = "";
+    document
+      .querySelectorAll(".letter-highlight")
+      .forEach((el) => el.classList.remove("letter-highlight"));
+    const issueCount = document.createElement("strong");
+    validity.append(issueCount);
+    if (brokenRules.length === 0) {
+      validity.classList.remove("failure");
+      validity.classList.add("success");
+      issueCount.textContent = "No issues found!";
+    } else {
+      validity.classList.remove("success");
+      validity.classList.add("failure");
+      let issues = 0;
+      const ul = document.createElement("ul");
+      validity.append(ul);
+      brokenRules.forEach(([brokenLetter, brokenRule]) => {
+        const instances =
+          typeof brokenRule === "boolean"
+            ? [...toCheck].filter((l) => brokenLetter === l).length
+            : [...toCheck.matchAll(brokenRule.breaksRule)].length;
+        const li = document.createElement("li");
+        ul.append(li);
+        const strong = document.createElement("strong");
+        strong.textContent = brokenLetter;
+        li.append(
+          typeof brokenRule === "boolean" ? "Use of " : "Inappropriate use of ",
+          strong,
+          ` (${instances} instance${instances === 1 ? "" : "s"})`
+        );
+        issues += instances;
+        document
+          .querySelector(`[data-letter-${brokenLetter}]`)
+          ?.classList.add("letter-highlight");
+      });
+      issueCount.textContent = `${issues} issue${
+        issues === 1 ? "" : "s"
+      } found.`;
+    }
+  };
+
+  check();
+  input.addEventListener("input", check);
 })();
